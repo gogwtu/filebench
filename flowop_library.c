@@ -443,6 +443,8 @@ flowoplib_iobufsetup(threadflow_t *threadflow, flowop_t *flowop,
 		fb_random(&memoffset, memsize, iosize, NULL);
 		*iobufp = threadflow->tf_mem + memoffset;
 
+		//@ayu:人为将buf进行页面对齐
+    *iobufp = ((unsigned long)(threadflow->tf_mem + 4095)) & (~((1 << 12) - 1));
 	} else {
 		/* use private I/O buffer */
 		if ((flowop->fo_buf != NULL) &&
