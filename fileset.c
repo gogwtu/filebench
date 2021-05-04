@@ -346,8 +346,11 @@ fileset_alloc_file(filesetentry_t *entry)
 			return (FILEBENCH_ERROR);
 		}
 	}
-
-	if ((buf = (char *)malloc(FILE_ALLOC_BLOCK)) == NULL) {
+	
+  //@ayu:人为将写缓冲地址进行4KB页面对齐
+  //因此先将缓冲区空间增大一个页面
+  if ((buf = (char *)malloc(FILE_ALLOC_BLOCK + 4096)) == NULL) {
+	//if ((buf = (char *)malloc(FILE_ALLOC_BLOCK)) == NULL) {
 		/* unbusy the unallocated entry */
 		fileset_unbusy(entry, TRUE, FALSE, 0);
 		return (FILEBENCH_ERROR);
@@ -363,7 +366,9 @@ fileset_alloc_file(filesetentry_t *entry)
 		 */
 		wsize = MIN(entry->fse_size - seek, FILE_ALLOC_BLOCK);
 
-		ret = FB_WRITE(&fdesc, buf, wsize);
+		//@ayu:人为将写缓冲地址进行页面对齐
+    ret = FB_WRITE(&fdesc, ((unsigned long)(buf + 4095)) & (~((1 << 12) - 1)), wsize);
+		//ret = FB_WRITE(&fdesc, buf, wsize);
 		if (ret != wsize) {
 			filebench_log(LOG_ERROR,
 			    "Failed to pre-allocate file %s: %s",
